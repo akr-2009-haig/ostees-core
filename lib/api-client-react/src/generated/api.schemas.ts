@@ -8,3 +8,105 @@
 export interface HealthStatus {
   status: string;
 }
+
+export interface Token {
+  contractAddress?: string | null;
+  symbol: string;
+  name: string;
+  decimals: number;
+  isNative: boolean;
+  isVerified: boolean;
+  coingeckoId?: string | null;
+  logoUrl?: string | null;
+  chainId: number;
+  priceUsd?: number | null;
+  priceChange24h?: number | null;
+}
+
+export interface TokenPriceDetail {
+  symbol: string;
+  priceUsd: number;
+  priceChange24h?: number | null;
+  marketCapUsd?: number | null;
+  volume24hUsd?: number | null;
+  lastUpdated?: string;
+}
+
+export interface Transaction {
+  txHash: string;
+  chainId: number;
+  blockNumber?: string | null;
+  fromAddress?: string | null;
+  toAddress?: string | null;
+  value?: string | null;
+  valueUsd?: number | null;
+  tokenSymbol?: string | null;
+  tokenAmount?: string | null;
+  gasUsed?: string | null;
+  gasFeeEth?: string | null;
+  gasFeeUsd?: number | null;
+  status: string;
+  txType?: string | null;
+  decodedMethod?: string | null;
+  timestamp: string;
+}
+
+export interface TransactionPage {
+  items: Transaction[];
+  total: number;
+  page: number;
+  limit: number;
+}
+
+export interface ContractTemplate {
+  id: string;
+  name: string;
+  description: string;
+  type: string;
+  features?: string[];
+  estimatedGasUsd?: number | null;
+  iconUrl?: string | null;
+}
+
+export interface GasEstimateRequest {
+  contractType: string;
+  chainId?: number;
+}
+
+export interface GasEstimate {
+  gasUnits: string;
+  gasPriceGwei: string;
+  estimatedEth: string;
+  estimatedUsd: number;
+}
+
+export interface Network {
+  chainId: number;
+  name: string;
+  symbol: string;
+  decimals: number;
+  rpcUrl: string;
+  explorerUrl: string;
+  iconUrl?: string | null;
+  isTestnet: boolean;
+  isEVM: boolean;
+  averageBlockTime?: number | null;
+}
+
+export type ListTokensParams = {
+  chainId: number;
+  search?: string;
+};
+
+export type GetTokenPricesParams = {
+  symbols: string;
+};
+
+export type GetTokenPrices200 = { [key: string]: number };
+
+export type ListTransactionsParams = {
+  address: string;
+  chainId: number;
+  page?: number;
+  limit?: number;
+};

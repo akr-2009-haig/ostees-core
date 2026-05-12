@@ -10,6 +10,16 @@ servers:
 tags:
   - name: health
     description: Health operations
+  - name: tokens
+    description: Token operations
+  - name: prices
+    description: Price operations
+  - name: transactions
+    description: Transaction operations
+  - name: contracts
+    description: Contract operations
+  - name: networks
+    description: Network operations
 paths:
   /healthz:
     get:
@@ -24,6 +34,178 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/HealthStatus"
+
+  /tokens:
+    get:
+      operationId: listTokens
+      tags: [tokens]
+      summary: List tokens for a chain
+      parameters:
+        - name: chainId
+          in: query
+          required: true
+          schema:
+            type: integer
+        - name: search
+          in: query
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Token list
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Token"
+
+  /prices:
+    get:
+      operationId: getTokenPrices
+      tags: [prices]
+      summary: Get prices for multiple token symbols
+      parameters:
+        - name: symbols
+          in: query
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Price map
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties:
+                  type: number
+
+  /prices/{symbol}:
+    get:
+      operationId: getTokenPrice
+      tags: [prices]
+      summary: Get price for a single token symbol
+      parameters:
+        - name: symbol
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Token price detail
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/TokenPriceDetail"
+        "404":
+          description: Not found
+
+  /transactions:
+    get:
+      operationId: listTransactions
+      tags: [transactions]
+      summary: List transactions for an address
+      parameters:
+        - name: address
+          in: query
+          required: true
+          schema:
+            type: string
+        - name: chainId
+          in: query
+          required: true
+          schema:
+            type: integer
+        - name: page
+          in: query
+          schema:
+            type: integer
+            default: 1
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            default: 20
+      responses:
+        "200":
+          description: Paginated transaction list
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/TransactionPage"
+
+  /contracts/templates:
+    get:
+      operationId: listContractTemplates
+      tags: [contracts]
+      summary: List available contract templates
+      responses:
+        "200":
+          description: Template list
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/ContractTemplate"
+
+  /contracts/estimate-gas:
+    post:
+      operationId: estimateDeployGas
+      tags: [contracts]
+      summary: Estimate gas for contract deployment
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/GasEstimateRequest"
+      responses:
+        "200":
+          description: Gas estimate
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/GasEstimate"
+
+  /networks:
+    get:
+      operationId: listNetworks
+      tags: [networks]
+      summary: List supported networks
+      responses:
+        "200":
+          description: Network list
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Network"
+
+  /networks/{chainId}:
+    get:
+      operationId: getNetwork
+      tags: [networks]
+      summary: Get network by chain ID
+      parameters:
+        - name: chainId
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Network details
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Network"
+        "404":
+          description: Not found
+
 components:
   schemas:
     HealthStatus:
@@ -34,3 +216,223 @@ components:
       required:
         - status
 
+    Token:
+      type: object
+      properties:
+        contractAddress:
+          type: string
+          nullable: true
+        symbol:
+          type: string
+        name:
+          type: string
+        decimals:
+          type: integer
+        isNative:
+          type: boolean
+        isVerified:
+          type: boolean
+        coingeckoId:
+          type: string
+          nullable: true
+        logoUrl:
+          type: string
+          nullable: true
+        chainId:
+          type: integer
+        priceUsd:
+          type: number
+          nullable: true
+        priceChange24h:
+          type: number
+          nullable: true
+      required:
+        - symbol
+        - name
+        - decimals
+        - isNative
+        - isVerified
+        - chainId
+
+    TokenPriceDetail:
+      type: object
+      properties:
+        symbol:
+          type: string
+        priceUsd:
+          type: number
+        priceChange24h:
+          type: number
+          nullable: true
+        marketCapUsd:
+          type: number
+          nullable: true
+        volume24hUsd:
+          type: number
+          nullable: true
+        lastUpdated:
+          type: string
+      required:
+        - symbol
+        - priceUsd
+
+    Transaction:
+      type: object
+      properties:
+        txHash:
+          type: string
+        chainId:
+          type: integer
+        blockNumber:
+          type: string
+          nullable: true
+        fromAddress:
+          type: string
+          nullable: true
+        toAddress:
+          type: string
+          nullable: true
+        value:
+          type: string
+          nullable: true
+        valueUsd:
+          type: number
+          nullable: true
+        tokenSymbol:
+          type: string
+          nullable: true
+        tokenAmount:
+          type: string
+          nullable: true
+        gasUsed:
+          type: string
+          nullable: true
+        gasFeeEth:
+          type: string
+          nullable: true
+        gasFeeUsd:
+          type: number
+          nullable: true
+        status:
+          type: string
+        txType:
+          type: string
+          nullable: true
+        decodedMethod:
+          type: string
+          nullable: true
+        timestamp:
+          type: string
+      required:
+        - txHash
+        - chainId
+        - status
+        - timestamp
+
+    TransactionPage:
+      type: object
+      properties:
+        items:
+          type: array
+          items:
+            $ref: "#/components/schemas/Transaction"
+        total:
+          type: integer
+        page:
+          type: integer
+        limit:
+          type: integer
+      required:
+        - items
+        - total
+        - page
+        - limit
+
+    ContractTemplate:
+      type: object
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+        description:
+          type: string
+        type:
+          type: string
+        features:
+          type: array
+          items:
+            type: string
+        estimatedGasUsd:
+          type: number
+          nullable: true
+        iconUrl:
+          type: string
+          nullable: true
+      required:
+        - id
+        - name
+        - description
+        - type
+
+    GasEstimateRequest:
+      type: object
+      properties:
+        contractType:
+          type: string
+        chainId:
+          type: integer
+      required:
+        - contractType
+
+    GasEstimate:
+      type: object
+      properties:
+        gasUnits:
+          type: string
+        gasPriceGwei:
+          type: string
+        estimatedEth:
+          type: string
+        estimatedUsd:
+          type: number
+      required:
+        - gasUnits
+        - gasPriceGwei
+        - estimatedEth
+        - estimatedUsd
+
+    Network:
+      type: object
+      properties:
+        chainId:
+          type: integer
+        name:
+          type: string
+        symbol:
+          type: string
+        decimals:
+          type: integer
+        rpcUrl:
+          type: string
+        explorerUrl:
+          type: string
+        iconUrl:
+          type: string
+          nullable: true
+        isTestnet:
+          type: boolean
+        isEVM:
+          type: boolean
+        averageBlockTime:
+          type: integer
+          nullable: true
+      required:
+        - chainId
+        - name
+        - symbol
+        - decimals
+        - rpcUrl
+        - explorerUrl
+        - isTestnet
+        - isEVM

@@ -14,3 +14,158 @@ import * as zod from "zod";
 export const HealthCheckResponse = zod.object({
   status: zod.string(),
 });
+
+/**
+ * @summary List tokens for a chain
+ */
+export const ListTokensQueryParams = zod.object({
+  chainId: zod.coerce.number(),
+  search: zod.coerce.string().optional(),
+});
+
+export const ListTokensResponseItem = zod.object({
+  contractAddress: zod.string().nullish(),
+  symbol: zod.string(),
+  name: zod.string(),
+  decimals: zod.number(),
+  isNative: zod.boolean(),
+  isVerified: zod.boolean(),
+  coingeckoId: zod.string().nullish(),
+  logoUrl: zod.string().nullish(),
+  chainId: zod.number(),
+  priceUsd: zod.number().nullish(),
+  priceChange24h: zod.number().nullish(),
+});
+export const ListTokensResponse = zod.array(ListTokensResponseItem);
+
+/**
+ * @summary Get prices for multiple token symbols
+ */
+export const GetTokenPricesQueryParams = zod.object({
+  symbols: zod.coerce.string(),
+});
+
+export const GetTokenPricesResponse = zod.record(zod.string(), zod.number());
+
+/**
+ * @summary Get price for a single token symbol
+ */
+export const GetTokenPriceParams = zod.object({
+  symbol: zod.coerce.string(),
+});
+
+export const GetTokenPriceResponse = zod.object({
+  symbol: zod.string(),
+  priceUsd: zod.number(),
+  priceChange24h: zod.number().nullish(),
+  marketCapUsd: zod.number().nullish(),
+  volume24hUsd: zod.number().nullish(),
+  lastUpdated: zod.string().optional(),
+});
+
+/**
+ * @summary List transactions for an address
+ */
+export const listTransactionsQueryPageDefault = 1;
+export const listTransactionsQueryLimitDefault = 20;
+
+export const ListTransactionsQueryParams = zod.object({
+  address: zod.coerce.string(),
+  chainId: zod.coerce.number(),
+  page: zod.coerce.number().default(listTransactionsQueryPageDefault),
+  limit: zod.coerce.number().default(listTransactionsQueryLimitDefault),
+});
+
+export const ListTransactionsResponse = zod.object({
+  items: zod.array(
+    zod.object({
+      txHash: zod.string(),
+      chainId: zod.number(),
+      blockNumber: zod.string().nullish(),
+      fromAddress: zod.string().nullish(),
+      toAddress: zod.string().nullish(),
+      value: zod.string().nullish(),
+      valueUsd: zod.number().nullish(),
+      tokenSymbol: zod.string().nullish(),
+      tokenAmount: zod.string().nullish(),
+      gasUsed: zod.string().nullish(),
+      gasFeeEth: zod.string().nullish(),
+      gasFeeUsd: zod.number().nullish(),
+      status: zod.string(),
+      txType: zod.string().nullish(),
+      decodedMethod: zod.string().nullish(),
+      timestamp: zod.string(),
+    }),
+  ),
+  total: zod.number(),
+  page: zod.number(),
+  limit: zod.number(),
+});
+
+/**
+ * @summary List available contract templates
+ */
+export const ListContractTemplatesResponseItem = zod.object({
+  id: zod.string(),
+  name: zod.string(),
+  description: zod.string(),
+  type: zod.string(),
+  features: zod.array(zod.string()).optional(),
+  estimatedGasUsd: zod.number().nullish(),
+  iconUrl: zod.string().nullish(),
+});
+export const ListContractTemplatesResponse = zod.array(
+  ListContractTemplatesResponseItem,
+);
+
+/**
+ * @summary Estimate gas for contract deployment
+ */
+export const EstimateDeployGasBody = zod.object({
+  contractType: zod.string(),
+  chainId: zod.number().optional(),
+});
+
+export const EstimateDeployGasResponse = zod.object({
+  gasUnits: zod.string(),
+  gasPriceGwei: zod.string(),
+  estimatedEth: zod.string(),
+  estimatedUsd: zod.number(),
+});
+
+/**
+ * @summary List supported networks
+ */
+export const ListNetworksResponseItem = zod.object({
+  chainId: zod.number(),
+  name: zod.string(),
+  symbol: zod.string(),
+  decimals: zod.number(),
+  rpcUrl: zod.string(),
+  explorerUrl: zod.string(),
+  iconUrl: zod.string().nullish(),
+  isTestnet: zod.boolean(),
+  isEVM: zod.boolean(),
+  averageBlockTime: zod.number().nullish(),
+});
+export const ListNetworksResponse = zod.array(ListNetworksResponseItem);
+
+/**
+ * @summary Get network by chain ID
+ */
+export const GetNetworkParams = zod.object({
+  chainId: zod.coerce.number(),
+});
+
+export const GetNetworkResponse = zod.object({
+  chainId: zod.number(),
+  name: zod.string(),
+  symbol: zod.string(),
+  decimals: zod.number(),
+  rpcUrl: zod.string(),
+  explorerUrl: zod.string(),
+  iconUrl: zod.string().nullish(),
+  isTestnet: zod.boolean(),
+  isEVM: zod.boolean(),
+  averageBlockTime: zod.number().nullish(),
+});

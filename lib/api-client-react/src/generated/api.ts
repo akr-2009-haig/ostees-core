@@ -5,18 +5,34 @@
  * API specification
  * OpenAPI spec version: 0.1.0
  */
-import { useQuery } from "@tanstack/react-query";
+import { useMutation, useQuery } from "@tanstack/react-query";
 import type {
+  MutationFunction,
   QueryFunction,
   QueryKey,
+  UseMutationOptions,
+  UseMutationResult,
   UseQueryOptions,
   UseQueryResult,
 } from "@tanstack/react-query";
 
-import type { HealthStatus } from "./api.schemas";
+import type {
+  ContractTemplate,
+  GasEstimate,
+  GasEstimateRequest,
+  GetTokenPrices200,
+  GetTokenPricesParams,
+  HealthStatus,
+  ListTokensParams,
+  ListTransactionsParams,
+  Network,
+  Token,
+  TokenPriceDetail,
+  TransactionPage,
+} from "./api.schemas";
 
 import { customFetch } from "../custom-fetch";
-import type { ErrorType } from "../custom-fetch";
+import type { ErrorType, BodyType } from "../custom-fetch";
 
 type AwaitedInput<T> = PromiseLike<T> | T;
 
@@ -92,6 +108,701 @@ export function useHealthCheck<
   request?: SecondParameter<typeof customFetch>;
 }): UseQueryResult<TData, TError> & { queryKey: QueryKey } {
   const queryOptions = getHealthCheckQueryOptions(options);
+
+  const query = useQuery(queryOptions) as UseQueryResult<TData, TError> & {
+    queryKey: QueryKey;
+  };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+/**
+ * @summary List tokens for a chain
+ */
+export const getListTokensUrl = (params: ListTokensParams) => {
+  const normalizedParams = new URLSearchParams();
+
+  Object.entries(params || {}).forEach(([key, value]) => {
+    if (value !== undefined) {
+      normalizedParams.append(key, value === null ? "null" : value.toString());
+    }
+  });
+
+  const stringifiedParams = normalizedParams.toString();
+
+  return stringifiedParams.length > 0
+    ? `/api/tokens?${stringifiedParams}`
+    : `/api/tokens`;
+};
+
+export const listTokens = async (
+  params: ListTokensParams,
+  options?: RequestInit,
+): Promise<Token[]> => {
+  return customFetch<Token[]>(getListTokensUrl(params), {
+    ...options,
+    method: "GET",
+  });
+};
+
+export const getListTokensQueryKey = (params?: ListTokensParams) => {
+  return [`/api/tokens`, ...(params ? [params] : [])] as const;
+};
+
+export const getListTokensQueryOptions = <
+  TData = Awaited<ReturnType<typeof listTokens>>,
+  TError = ErrorType<unknown>,
+>(
+  params: ListTokensParams,
+  options?: {
+    query?: UseQueryOptions<
+      Awaited<ReturnType<typeof listTokens>>,
+      TError,
+      TData
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
+
+  const queryKey = queryOptions?.queryKey ?? getListTokensQueryKey(params);
+
+  const queryFn: QueryFunction<Awaited<ReturnType<typeof listTokens>>> = ({
+    signal,
+  }) => listTokens(params, { signal, ...requestOptions });
+
+  return { queryKey, queryFn, ...queryOptions } as UseQueryOptions<
+    Awaited<ReturnType<typeof listTokens>>,
+    TError,
+    TData
+  > & { queryKey: QueryKey };
+};
+
+export type ListTokensQueryResult = NonNullable<
+  Awaited<ReturnType<typeof listTokens>>
+>;
+export type ListTokensQueryError = ErrorType<unknown>;
+
+/**
+ * @summary List tokens for a chain
+ */
+
+export function useListTokens<
+  TData = Awaited<ReturnType<typeof listTokens>>,
+  TError = ErrorType<unknown>,
+>(
+  params: ListTokensParams,
+  options?: {
+    query?: UseQueryOptions<
+      Awaited<ReturnType<typeof listTokens>>,
+      TError,
+      TData
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+): UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+  const queryOptions = getListTokensQueryOptions(params, options);
+
+  const query = useQuery(queryOptions) as UseQueryResult<TData, TError> & {
+    queryKey: QueryKey;
+  };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+/**
+ * @summary Get prices for multiple token symbols
+ */
+export const getGetTokenPricesUrl = (params: GetTokenPricesParams) => {
+  const normalizedParams = new URLSearchParams();
+
+  Object.entries(params || {}).forEach(([key, value]) => {
+    if (value !== undefined) {
+      normalizedParams.append(key, value === null ? "null" : value.toString());
+    }
+  });
+
+  const stringifiedParams = normalizedParams.toString();
+
+  return stringifiedParams.length > 0
+    ? `/api/prices?${stringifiedParams}`
+    : `/api/prices`;
+};
+
+export const getTokenPrices = async (
+  params: GetTokenPricesParams,
+  options?: RequestInit,
+): Promise<GetTokenPrices200> => {
+  return customFetch<GetTokenPrices200>(getGetTokenPricesUrl(params), {
+    ...options,
+    method: "GET",
+  });
+};
+
+export const getGetTokenPricesQueryKey = (params?: GetTokenPricesParams) => {
+  return [`/api/prices`, ...(params ? [params] : [])] as const;
+};
+
+export const getGetTokenPricesQueryOptions = <
+  TData = Awaited<ReturnType<typeof getTokenPrices>>,
+  TError = ErrorType<unknown>,
+>(
+  params: GetTokenPricesParams,
+  options?: {
+    query?: UseQueryOptions<
+      Awaited<ReturnType<typeof getTokenPrices>>,
+      TError,
+      TData
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
+
+  const queryKey = queryOptions?.queryKey ?? getGetTokenPricesQueryKey(params);
+
+  const queryFn: QueryFunction<Awaited<ReturnType<typeof getTokenPrices>>> = ({
+    signal,
+  }) => getTokenPrices(params, { signal, ...requestOptions });
+
+  return { queryKey, queryFn, ...queryOptions } as UseQueryOptions<
+    Awaited<ReturnType<typeof getTokenPrices>>,
+    TError,
+    TData
+  > & { queryKey: QueryKey };
+};
+
+export type GetTokenPricesQueryResult = NonNullable<
+  Awaited<ReturnType<typeof getTokenPrices>>
+>;
+export type GetTokenPricesQueryError = ErrorType<unknown>;
+
+/**
+ * @summary Get prices for multiple token symbols
+ */
+
+export function useGetTokenPrices<
+  TData = Awaited<ReturnType<typeof getTokenPrices>>,
+  TError = ErrorType<unknown>,
+>(
+  params: GetTokenPricesParams,
+  options?: {
+    query?: UseQueryOptions<
+      Awaited<ReturnType<typeof getTokenPrices>>,
+      TError,
+      TData
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+): UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+  const queryOptions = getGetTokenPricesQueryOptions(params, options);
+
+  const query = useQuery(queryOptions) as UseQueryResult<TData, TError> & {
+    queryKey: QueryKey;
+  };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+/**
+ * @summary Get price for a single token symbol
+ */
+export const getGetTokenPriceUrl = (symbol: string) => {
+  return `/api/prices/${symbol}`;
+};
+
+export const getTokenPrice = async (
+  symbol: string,
+  options?: RequestInit,
+): Promise<TokenPriceDetail> => {
+  return customFetch<TokenPriceDetail>(getGetTokenPriceUrl(symbol), {
+    ...options,
+    method: "GET",
+  });
+};
+
+export const getGetTokenPriceQueryKey = (symbol: string) => {
+  return [`/api/prices/${symbol}`] as const;
+};
+
+export const getGetTokenPriceQueryOptions = <
+  TData = Awaited<ReturnType<typeof getTokenPrice>>,
+  TError = ErrorType<void>,
+>(
+  symbol: string,
+  options?: {
+    query?: UseQueryOptions<
+      Awaited<ReturnType<typeof getTokenPrice>>,
+      TError,
+      TData
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
+
+  const queryKey = queryOptions?.queryKey ?? getGetTokenPriceQueryKey(symbol);
+
+  const queryFn: QueryFunction<Awaited<ReturnType<typeof getTokenPrice>>> = ({
+    signal,
+  }) => getTokenPrice(symbol, { signal, ...requestOptions });
+
+  return {
+    queryKey,
+    queryFn,
+    enabled: !!symbol,
+    ...queryOptions,
+  } as UseQueryOptions<
+    Awaited<ReturnType<typeof getTokenPrice>>,
+    TError,
+    TData
+  > & { queryKey: QueryKey };
+};
+
+export type GetTokenPriceQueryResult = NonNullable<
+  Awaited<ReturnType<typeof getTokenPrice>>
+>;
+export type GetTokenPriceQueryError = ErrorType<void>;
+
+/**
+ * @summary Get price for a single token symbol
+ */
+
+export function useGetTokenPrice<
+  TData = Awaited<ReturnType<typeof getTokenPrice>>,
+  TError = ErrorType<void>,
+>(
+  symbol: string,
+  options?: {
+    query?: UseQueryOptions<
+      Awaited<ReturnType<typeof getTokenPrice>>,
+      TError,
+      TData
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+): UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+  const queryOptions = getGetTokenPriceQueryOptions(symbol, options);
+
+  const query = useQuery(queryOptions) as UseQueryResult<TData, TError> & {
+    queryKey: QueryKey;
+  };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+/**
+ * @summary List transactions for an address
+ */
+export const getListTransactionsUrl = (params: ListTransactionsParams) => {
+  const normalizedParams = new URLSearchParams();
+
+  Object.entries(params || {}).forEach(([key, value]) => {
+    if (value !== undefined) {
+      normalizedParams.append(key, value === null ? "null" : value.toString());
+    }
+  });
+
+  const stringifiedParams = normalizedParams.toString();
+
+  return stringifiedParams.length > 0
+    ? `/api/transactions?${stringifiedParams}`
+    : `/api/transactions`;
+};
+
+export const listTransactions = async (
+  params: ListTransactionsParams,
+  options?: RequestInit,
+): Promise<TransactionPage> => {
+  return customFetch<TransactionPage>(getListTransactionsUrl(params), {
+    ...options,
+    method: "GET",
+  });
+};
+
+export const getListTransactionsQueryKey = (
+  params?: ListTransactionsParams,
+) => {
+  return [`/api/transactions`, ...(params ? [params] : [])] as const;
+};
+
+export const getListTransactionsQueryOptions = <
+  TData = Awaited<ReturnType<typeof listTransactions>>,
+  TError = ErrorType<unknown>,
+>(
+  params: ListTransactionsParams,
+  options?: {
+    query?: UseQueryOptions<
+      Awaited<ReturnType<typeof listTransactions>>,
+      TError,
+      TData
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
+
+  const queryKey =
+    queryOptions?.queryKey ?? getListTransactionsQueryKey(params);
+
+  const queryFn: QueryFunction<
+    Awaited<ReturnType<typeof listTransactions>>
+  > = ({ signal }) => listTransactions(params, { signal, ...requestOptions });
+
+  return { queryKey, queryFn, ...queryOptions } as UseQueryOptions<
+    Awaited<ReturnType<typeof listTransactions>>,
+    TError,
+    TData
+  > & { queryKey: QueryKey };
+};
+
+export type ListTransactionsQueryResult = NonNullable<
+  Awaited<ReturnType<typeof listTransactions>>
+>;
+export type ListTransactionsQueryError = ErrorType<unknown>;
+
+/**
+ * @summary List transactions for an address
+ */
+
+export function useListTransactions<
+  TData = Awaited<ReturnType<typeof listTransactions>>,
+  TError = ErrorType<unknown>,
+>(
+  params: ListTransactionsParams,
+  options?: {
+    query?: UseQueryOptions<
+      Awaited<ReturnType<typeof listTransactions>>,
+      TError,
+      TData
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+): UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+  const queryOptions = getListTransactionsQueryOptions(params, options);
+
+  const query = useQuery(queryOptions) as UseQueryResult<TData, TError> & {
+    queryKey: QueryKey;
+  };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+/**
+ * @summary List available contract templates
+ */
+export const getListContractTemplatesUrl = () => {
+  return `/api/contracts/templates`;
+};
+
+export const listContractTemplates = async (
+  options?: RequestInit,
+): Promise<ContractTemplate[]> => {
+  return customFetch<ContractTemplate[]>(getListContractTemplatesUrl(), {
+    ...options,
+    method: "GET",
+  });
+};
+
+export const getListContractTemplatesQueryKey = () => {
+  return [`/api/contracts/templates`] as const;
+};
+
+export const getListContractTemplatesQueryOptions = <
+  TData = Awaited<ReturnType<typeof listContractTemplates>>,
+  TError = ErrorType<unknown>,
+>(options?: {
+  query?: UseQueryOptions<
+    Awaited<ReturnType<typeof listContractTemplates>>,
+    TError,
+    TData
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
+
+  const queryKey = queryOptions?.queryKey ?? getListContractTemplatesQueryKey();
+
+  const queryFn: QueryFunction<
+    Awaited<ReturnType<typeof listContractTemplates>>
+  > = ({ signal }) => listContractTemplates({ signal, ...requestOptions });
+
+  return { queryKey, queryFn, ...queryOptions } as UseQueryOptions<
+    Awaited<ReturnType<typeof listContractTemplates>>,
+    TError,
+    TData
+  > & { queryKey: QueryKey };
+};
+
+export type ListContractTemplatesQueryResult = NonNullable<
+  Awaited<ReturnType<typeof listContractTemplates>>
+>;
+export type ListContractTemplatesQueryError = ErrorType<unknown>;
+
+/**
+ * @summary List available contract templates
+ */
+
+export function useListContractTemplates<
+  TData = Awaited<ReturnType<typeof listContractTemplates>>,
+  TError = ErrorType<unknown>,
+>(options?: {
+  query?: UseQueryOptions<
+    Awaited<ReturnType<typeof listContractTemplates>>,
+    TError,
+    TData
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+  const queryOptions = getListContractTemplatesQueryOptions(options);
+
+  const query = useQuery(queryOptions) as UseQueryResult<TData, TError> & {
+    queryKey: QueryKey;
+  };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+/**
+ * @summary Estimate gas for contract deployment
+ */
+export const getEstimateDeployGasUrl = () => {
+  return `/api/contracts/estimate-gas`;
+};
+
+export const estimateDeployGas = async (
+  gasEstimateRequest: GasEstimateRequest,
+  options?: RequestInit,
+): Promise<GasEstimate> => {
+  return customFetch<GasEstimate>(getEstimateDeployGasUrl(), {
+    ...options,
+    method: "POST",
+    headers: { "Content-Type": "application/json", ...options?.headers },
+    body: JSON.stringify(gasEstimateRequest),
+  });
+};
+
+export const getEstimateDeployGasMutationOptions = <
+  TError = ErrorType<unknown>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof estimateDeployGas>>,
+    TError,
+    { data: BodyType<GasEstimateRequest> },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationOptions<
+  Awaited<ReturnType<typeof estimateDeployGas>>,
+  TError,
+  { data: BodyType<GasEstimateRequest> },
+  TContext
+> => {
+  const mutationKey = ["estimateDeployGas"];
+  const { mutation: mutationOptions, request: requestOptions } = options
+    ? options.mutation &&
+      "mutationKey" in options.mutation &&
+      options.mutation.mutationKey
+      ? options
+      : { ...options, mutation: { ...options.mutation, mutationKey } }
+    : { mutation: { mutationKey }, request: undefined };
+
+  const mutationFn: MutationFunction<
+    Awaited<ReturnType<typeof estimateDeployGas>>,
+    { data: BodyType<GasEstimateRequest> }
+  > = (props) => {
+    const { data } = props ?? {};
+
+    return estimateDeployGas(data, requestOptions);
+  };
+
+  return { mutationFn, ...mutationOptions };
+};
+
+export type EstimateDeployGasMutationResult = NonNullable<
+  Awaited<ReturnType<typeof estimateDeployGas>>
+>;
+export type EstimateDeployGasMutationBody = BodyType<GasEstimateRequest>;
+export type EstimateDeployGasMutationError = ErrorType<unknown>;
+
+/**
+ * @summary Estimate gas for contract deployment
+ */
+export const useEstimateDeployGas = <
+  TError = ErrorType<unknown>,
+  TContext = unknown,
+>(options?: {
+  mutation?: UseMutationOptions<
+    Awaited<ReturnType<typeof estimateDeployGas>>,
+    TError,
+    { data: BodyType<GasEstimateRequest> },
+    TContext
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseMutationResult<
+  Awaited<ReturnType<typeof estimateDeployGas>>,
+  TError,
+  { data: BodyType<GasEstimateRequest> },
+  TContext
+> => {
+  return useMutation(getEstimateDeployGasMutationOptions(options));
+};
+
+/**
+ * @summary List supported networks
+ */
+export const getListNetworksUrl = () => {
+  return `/api/networks`;
+};
+
+export const listNetworks = async (
+  options?: RequestInit,
+): Promise<Network[]> => {
+  return customFetch<Network[]>(getListNetworksUrl(), {
+    ...options,
+    method: "GET",
+  });
+};
+
+export const getListNetworksQueryKey = () => {
+  return [`/api/networks`] as const;
+};
+
+export const getListNetworksQueryOptions = <
+  TData = Awaited<ReturnType<typeof listNetworks>>,
+  TError = ErrorType<unknown>,
+>(options?: {
+  query?: UseQueryOptions<
+    Awaited<ReturnType<typeof listNetworks>>,
+    TError,
+    TData
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
+
+  const queryKey = queryOptions?.queryKey ?? getListNetworksQueryKey();
+
+  const queryFn: QueryFunction<Awaited<ReturnType<typeof listNetworks>>> = ({
+    signal,
+  }) => listNetworks({ signal, ...requestOptions });
+
+  return { queryKey, queryFn, ...queryOptions } as UseQueryOptions<
+    Awaited<ReturnType<typeof listNetworks>>,
+    TError,
+    TData
+  > & { queryKey: QueryKey };
+};
+
+export type ListNetworksQueryResult = NonNullable<
+  Awaited<ReturnType<typeof listNetworks>>
+>;
+export type ListNetworksQueryError = ErrorType<unknown>;
+
+/**
+ * @summary List supported networks
+ */
+
+export function useListNetworks<
+  TData = Awaited<ReturnType<typeof listNetworks>>,
+  TError = ErrorType<unknown>,
+>(options?: {
+  query?: UseQueryOptions<
+    Awaited<ReturnType<typeof listNetworks>>,
+    TError,
+    TData
+  >;
+  request?: SecondParameter<typeof customFetch>;
+}): UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+  const queryOptions = getListNetworksQueryOptions(options);
+
+  const query = useQuery(queryOptions) as UseQueryResult<TData, TError> & {
+    queryKey: QueryKey;
+  };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+/**
+ * @summary Get network by chain ID
+ */
+export const getGetNetworkUrl = (chainId: number) => {
+  return `/api/networks/${chainId}`;
+};
+
+export const getNetwork = async (
+  chainId: number,
+  options?: RequestInit,
+): Promise<Network> => {
+  return customFetch<Network>(getGetNetworkUrl(chainId), {
+    ...options,
+    method: "GET",
+  });
+};
+
+export const getGetNetworkQueryKey = (chainId: number) => {
+  return [`/api/networks/${chainId}`] as const;
+};
+
+export const getGetNetworkQueryOptions = <
+  TData = Awaited<ReturnType<typeof getNetwork>>,
+  TError = ErrorType<void>,
+>(
+  chainId: number,
+  options?: {
+    query?: UseQueryOptions<
+      Awaited<ReturnType<typeof getNetwork>>,
+      TError,
+      TData
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+) => {
+  const { query: queryOptions, request: requestOptions } = options ?? {};
+
+  const queryKey = queryOptions?.queryKey ?? getGetNetworkQueryKey(chainId);
+
+  const queryFn: QueryFunction<Awaited<ReturnType<typeof getNetwork>>> = ({
+    signal,
+  }) => getNetwork(chainId, { signal, ...requestOptions });
+
+  return {
+    queryKey,
+    queryFn,
+    enabled: !!chainId,
+    ...queryOptions,
+  } as UseQueryOptions<
+    Awaited<ReturnType<typeof getNetwork>>,
+    TError,
+    TData
+  > & { queryKey: QueryKey };
+};
+
+export type GetNetworkQueryResult = NonNullable<
+  Awaited<ReturnType<typeof getNetwork>>
+>;
+export type GetNetworkQueryError = ErrorType<void>;
+
+/**
+ * @summary Get network by chain ID
+ */
+
+export function useGetNetwork<
+  TData = Awaited<ReturnType<typeof getNetwork>>,
+  TError = ErrorType<void>,
+>(
+  chainId: number,
+  options?: {
+    query?: UseQueryOptions<
+      Awaited<ReturnType<typeof getNetwork>>,
+      TError,
+      TData
+    >;
+    request?: SecondParameter<typeof customFetch>;
+  },
+): UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+  const queryOptions = getGetNetworkQueryOptions(chainId, options);
 
   const query = useQuery(queryOptions) as UseQueryResult<TData, TError> & {
     queryKey: QueryKey;
